@@ -3,9 +3,11 @@ package com.client.controllers;
 import com.client.events.AuthEvent;
 import com.client.utils.ValidationUtils;
 import com.client.views.SignupView;
+
 import javafx.application.Platform;
 
 public class SignupController extends BaseController {
+
     private final SignupView view;
 
     public SignupController(SignupView view) {
@@ -89,16 +91,18 @@ public class SignupController extends BaseController {
     }
 
     private void validatePasswordMatch() {
-        if (view == null) return;
+        if (view == null) {
+            return;
+        }
 
         String password = view.getPasswordField().getText();
         String confirmPassword = view.getConfirmPasswordField().getText();
 
-        if (!ValidationUtils.isEmpty(confirmPassword) &&
-                !ValidationUtils.passwordsMatch(password, confirmPassword)) {
+        if (!ValidationUtils.isEmpty(confirmPassword)
+                && !ValidationUtils.passwordsMatch(password, confirmPassword)) {
             showFieldError("Passwords do not match");
-        } else if (ValidationUtils.isEmpty(confirmPassword) ||
-                ValidationUtils.passwordsMatch(password, confirmPassword)) {
+        } else if (ValidationUtils.isEmpty(confirmPassword)
+                || ValidationUtils.passwordsMatch(password, confirmPassword)) {
             clearError();
         }
         updateSignupButtonState();
@@ -110,16 +114,18 @@ public class SignupController extends BaseController {
             String password = view.getPasswordField().getText();
             String confirmPassword = view.getConfirmPasswordField().getText();
 
-            boolean isValid = ValidationUtils.isValidUsername(username) &&
-                    ValidationUtils.isValidPassword(password) &&
-                    ValidationUtils.passwordsMatch(password, confirmPassword);
+            boolean isValid = ValidationUtils.isValidUsername(username)
+                    && ValidationUtils.isValidPassword(password)
+                    && ValidationUtils.passwordsMatch(password, confirmPassword);
 
             view.getSignupButton().setDisable(!isValid);
         }
     }
 
     private void handleSignup() {
-        if (view == null) return;
+        if (view == null) {
+            return;
+        }
 
         String username = ValidationUtils.sanitizeInput(view.getUsernameField().getText().trim());
         String password = view.getPasswordField().getText();

@@ -3,4 +3,7 @@ module com.server {
     requires java.sql;
     requires jbcrypt;
     requires org.xerial.sqlitejdbc;
+
+    // Allows Gson to use reflection on the models package
+    opens com.server.models to com.google.gson;
 }

@@ -1,10 +1,11 @@
 package com.client.services;
 
+import java.util.concurrent.CompletableFuture;
+
 import com.client.core.AppState;
 import com.client.core.EventBus;
 import com.client.events.UIEvent;
 import com.client.models.User;
-import java.util.concurrent.CompletableFuture;
 
 public class UserService {
     private final NetworkService networkService;

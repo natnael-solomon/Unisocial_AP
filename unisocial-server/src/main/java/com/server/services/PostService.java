@@ -1,18 +1,21 @@
 package com.server.services;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.server.DatabaseManager;
 import com.server.models.Post;
 import com.server.utils.Logger;
-
-import java.sql.*;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Service for managing posts
  */
 public class PostService {
+
     private final DatabaseManager databaseManager;
 
     public PostService(DatabaseManager databaseManager) {
@@ -24,28 +27,39 @@ public class PostService {
      *
      * @param userId The user ID creating the post
      * @param content The post content
-     * @return true if post created successfully, false otherwise
+     * @return The created post if successful, null otherwise
      */
-    public boolean createPost(int userId, String content) {
+    public Post createPost(int userId, String content) {
         if (content == null || content.trim().isEmpty() || content.length() > 500) {
-            return false;
+            return null;
         }
 
         try (Connection conn = databaseManager.getConnection()) {
             String sql = """
                 INSERT INTO posts (user_id, content, created_at, updated_at)
                 VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                RETURNING id, user_id, content, created_at, updated_at
             """;
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, userId);
                 stmt.setString(2, content.trim());
 
-                int affectedRows = stmt.executeUpdate();
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        Post post = new Post();
+                        post.setId(rs.getInt("id"));
+                        post.setUserId(rs.getInt("user_id"));
+                        post.setContent(rs.getString("content"));
+                        post.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toString());
+                        post.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime().toString());
+                        post.setLikeCount(0);
+                        post.setLiked(false);
+                        post.setBookmarked(false);
 
-                if (affectedRows > 0) {
-                    Logger.info("Post created by user ID: " + userId);
-                    return true;
+                        Logger.info("Post created by user ID: " + userId);
+                        return post;
+                    }
                 }
             }
 
@@ -53,7 +67,7 @@ public class PostService {
             Logger.error("Error creating post: " + e.getMessage());
         }
 
-        return false;
+        return null;
     }
 
     /**
@@ -67,7 +81,7 @@ public class PostService {
 
         try (Connection conn = databaseManager.getConnection()) {
             String sql = """
-                SELECT DISTINCT p.id, p.user_id, u.username, p.content, p.image_url, 
+                SELECT DISTINCT p.id, p.user_id, u.username, p.content, p.image_url,
                        p.created_at, p.updated_at,
                        (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) as like_count,
                        (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) as user_liked,
@@ -78,7 +92,7 @@ public class PostService {
                 WHERE p.user_id = ? OR f.follower_id = ?
                 ORDER BY p.created_at DESC
                 LIMIT 50
-            """;
+           \s""";
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, userId);
@@ -97,8 +111,8 @@ public class PostService {
                         post.setLikeCount(rs.getInt("like_count"));
                         post.setLiked(rs.getInt("user_liked") > 0);
                         post.setBookmarked(rs.getInt("user_bookmarked") > 0);
-                        post.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                        post.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                        post.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toString());
+                        post.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime().toString());
 
                         posts.add(post);
                     }
@@ -117,7 +131,8 @@ public class PostService {
      * Get posts by a specific user
      *
      * @param userId The user ID whose posts to retrieve
-     * @param requestingUserId The user ID making the request (for like/bookmark status)
+     * @param requestingUserId The user ID making the request (for like/bookmark
+     * status)
      * @return List of user's posts
      */
     public List<Post> getUserPosts(int userId, int requestingUserId) {
@@ -153,8 +168,8 @@ public class PostService {
                         post.setLikeCount(rs.getInt("like_count"));
                         post.setLiked(rs.getInt("user_liked") > 0);
                         post.setBookmarked(rs.getInt("user_bookmarked") > 0);
-                        post.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                        post.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                        post.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toString());
+                        post.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime().toString());
 
                         posts.add(post);
                     }
@@ -224,6 +239,31 @@ public class PostService {
         }
 
         return false;
+    }
+
+    /**
+     * Get the number of likes for a post
+     *
+     * @param postId The post ID
+     * @return The number of likes for the post, or -1 if an error occurs
+     */
+    public int getLikeCount(int postId) {
+        String sql = "SELECT COUNT(*) as like_count FROM likes WHERE post_id = ?";
+
+        try (Connection conn = databaseManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, postId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("like_count");
+                }
+            }
+        } catch (SQLException e) {
+            Logger.error("Error getting like count for post " + postId + ": " + e.getMessage());
+        }
+
+        return -1; // Return -1 to indicate an error occurred
     }
 
     /**
@@ -339,7 +379,8 @@ public class PostService {
      * Get a specific post by ID
      *
      * @param postId The post ID
-     * @param requestingUserId The user ID making the request (for like/bookmark status)
+     * @param requestingUserId The user ID making the request (for like/bookmark
+     * status)
      * @return Post object if found, null otherwise
      */
     public Post getPostById(int postId, int requestingUserId) {
@@ -371,8 +412,8 @@ public class PostService {
                         post.setLikeCount(rs.getInt("like_count"));
                         post.setLiked(rs.getInt("user_liked") > 0);
                         post.setBookmarked(rs.getInt("user_bookmarked") > 0);
-                        post.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                        post.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                        post.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toString());
+                        post.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime().toString());
 
                         return post;
                     }
@@ -425,8 +466,8 @@ public class PostService {
                         post.setLikeCount(rs.getInt("like_count"));
                         post.setLiked(rs.getInt("user_liked") > 0);
                         post.setBookmarked(true);
-                        post.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                        post.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                        post.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toString());
+                        post.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime().toString());
 
                         posts.add(post);
                     }

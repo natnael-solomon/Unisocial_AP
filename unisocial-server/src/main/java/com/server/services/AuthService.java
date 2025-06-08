@@ -54,7 +54,7 @@ public class AuthService {
                             user.setFullName(rs.getString("full_name"));
                             user.setBio(rs.getString("bio"));
                             user.setAvatarUrl(rs.getString("avatar_url"));
-                            user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                            user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toString());
 
                             Logger.info("User authenticated: " + username);
                             return user;

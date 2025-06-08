@@ -1,7 +1,8 @@
 package com.client.events;
 
-import com.client.models.Post;
 import java.util.List;
+
+import com.client.models.Post;
 
 /**
  * Post related events
@@ -12,6 +13,7 @@ public class PostEvent {
      * Base class for all post events
      */
     public static abstract class PostEventBase {
+
         private final long timestamp;
 
         public PostEventBase() {
@@ -27,6 +29,7 @@ public class PostEvent {
      * Event fired when a post creation is attempted
      */
     public static class CreateAttempt extends PostEventBase {
+
         private final String content;
 
         public CreateAttempt(String content) {
@@ -48,6 +51,7 @@ public class PostEvent {
      * Event fired when post creation is successful
      */
     public static class CreateSuccess extends PostEventBase {
+
         private final String content;
         private final Post post; // Optional: if server returns the created post
 
@@ -81,6 +85,7 @@ public class PostEvent {
      * Event fired when post creation fails
      */
     public static class CreateFailure extends PostEventBase {
+
         private final String message;
         private final Throwable cause;
 
@@ -114,6 +119,7 @@ public class PostEvent {
      * Event fired when feed is successfully loaded
      */
     public static class FeedLoaded extends PostEventBase {
+
         private final List<Post> posts;
 
         public FeedLoaded(List<Post> posts) {
@@ -139,6 +145,7 @@ public class PostEvent {
      * Event fired when feed loading fails
      */
     public static class FeedLoadFailure extends PostEventBase {
+
         private final String message;
         private final Throwable cause;
 
@@ -172,6 +179,7 @@ public class PostEvent {
      * Event fired when a post is liked/unliked
      */
     public static class LikeToggled extends PostEventBase {
+
         private final int postId;
         private final boolean isLiked;
         private final int likeCount;
@@ -212,6 +220,7 @@ public class PostEvent {
      * Event fired when liking a post fails
      */
     public static class LikeFailure extends PostEventBase {
+
         private final int postId;
         private final String message;
         private final Throwable cause;
@@ -252,6 +261,7 @@ public class PostEvent {
      * Event fired when a post is bookmarked/unbookmarked
      */
     public static class BookmarkToggled extends PostEventBase {
+
         private final int postId;
         private final boolean isBookmarked;
 
@@ -279,6 +289,7 @@ public class PostEvent {
      * Event fired when bookmarking a post fails
      */
     public static class BookmarkFailure extends PostEventBase {
+
         private final int postId;
         private final String message;
         private final Throwable cause;
@@ -319,6 +330,7 @@ public class PostEvent {
      * Event fired when a post is deleted
      */
     public static class PostDeleted extends PostEventBase {
+
         private final int postId;
         private final String deletedBy; // Username who deleted the post
 
@@ -352,6 +364,7 @@ public class PostEvent {
      * Event fired when post deletion fails
      */
     public static class DeleteFailure extends PostEventBase {
+
         private final int postId;
         private final String message;
         private final Throwable cause;
@@ -392,6 +405,7 @@ public class PostEvent {
      * Event fired when a post is shared
      */
     public static class PostShared extends PostEventBase {
+
         private final int postId;
         private final String sharedBy;
         private final String platform; // e.g., "twitter", "facebook", "copy_link"
@@ -425,6 +439,7 @@ public class PostEvent {
      * Event fired when sharing a post fails
      */
     public static class ShareFailure extends PostEventBase {
+
         private final int postId;
         private final String message;
         private final String platform;
@@ -458,6 +473,7 @@ public class PostEvent {
      * Event fired when a post is reported
      */
     public static class PostReported extends PostEventBase {
+
         private final int postId;
         private final String reportedBy;
         private final String reason;

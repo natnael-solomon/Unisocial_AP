@@ -1,15 +1,16 @@
 package com.client.services;
 
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
 import com.client.core.EventBus;
 import com.client.events.PostEvent;
 import com.client.models.Post;
 import com.client.utils.ValidationUtils;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
 public class PostService {
+
     private final NetworkService networkService;
     private final EventBus eventBus;
 
@@ -36,15 +37,15 @@ public class PostService {
                 }
 
                 // Create post on server
-                boolean success = networkService.createPost(sanitizedContent);
+                Post createdPost = networkService.createPost(sanitizedContent);
 
-                if (success) {
-                    eventBus.publish(new PostEvent.CreateSuccess(sanitizedContent));
+                if (createdPost != null) {
+                    eventBus.publish(new PostEvent.CreateSuccess(sanitizedContent, createdPost));
+                    return true;
                 } else {
                     eventBus.publish(new PostEvent.CreateFailure("Failed to create post on server"));
+                    return false;
                 }
-
-                return success;
 
             } catch (IllegalArgumentException e) {
                 // Validation error
@@ -192,17 +193,19 @@ public class PostService {
      * Validate if a post is valid
      */
     private boolean isValidPost(Post post) {
-        return post != null &&
-                ValidationUtils.isNotEmpty(post.getUsername()) &&
-                ValidationUtils.isValidPostContent(post.getContent()) &&
-                post.getId() > 0;
+        return post != null
+                && ValidationUtils.isNotEmpty(post.getUsername())
+                && ValidationUtils.isValidPostContent(post.getContent())
+                && post.getId() > 0;
     }
 
     /**
      * Sanitize post data
      */
     private Post sanitizePost(Post post) {
-        if (post == null) return null;
+        if (post == null) {
+            return null;
+        }
 
         // Sanitize text fields
         post.setUsername(ValidationUtils.sanitizeInput(post.getUsername()));
@@ -212,8 +215,8 @@ public class PostService {
         post.setLikeCount(Math.max(0, post.getLikeCount()));
 
         // Validate image URL if present
-        if (ValidationUtils.isNotEmpty(post.getImageUrl()) &&
-                !isValidImageUrl(post.getImageUrl())) {
+        if (ValidationUtils.isNotEmpty(post.getImageUrl())
+                && !isValidImageUrl(post.getImageUrl())) {
             post.setImageUrl(null); // Remove invalid URL
         }
 
@@ -224,7 +227,9 @@ public class PostService {
      * Basic URL validation for images
      */
     private boolean isValidImageUrl(String url) {
-        if (ValidationUtils.isEmpty(url)) return false;
+        if (ValidationUtils.isEmpty(url)) {
+            return false;
+        }
 
         // Basic URL pattern check
         return url.matches("^https?://.*\\.(jpg|jpeg|png|gif|webp)$");
@@ -237,6 +242,4 @@ public class PostService {
         return ValidationUtils.isEmpty(content) ? 0 : content.length();
     }
 
-
 }
-

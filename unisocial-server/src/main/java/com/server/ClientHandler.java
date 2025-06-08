@@ -1,23 +1,27 @@
 package com.server;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.server.models.Post;
 import com.server.models.User;
 import com.server.services.AuthService;
 import com.server.services.PostService;
 import com.server.services.UserService;
 import com.server.utils.Logger;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import java.io.*;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
-
 /**
  * Handles individual client connections
  */
 public class ClientHandler implements Runnable {
+
     private final Socket clientSocket;
     private final AuthService authService;
     private final PostService postService;
@@ -30,7 +34,7 @@ public class ClientHandler implements Runnable {
     private boolean running = true;
 
     public ClientHandler(Socket clientSocket, AuthService authService,
-                         PostService postService, UserService userService) {
+            PostService postService, UserService userService) {
         this.clientSocket = clientSocket;
         this.authService = authService;
         this.postService = postService;
@@ -148,7 +152,6 @@ public class ClientHandler implements Runnable {
     }
 
     // ==================== COMMAND HANDLERS ====================
-
     private JsonObject handleHandshake(JsonObject data) {
         JsonObject response = new JsonObject();
         response.addProperty("success", true);
@@ -219,11 +222,16 @@ public class ClientHandler implements Runnable {
         }
 
         String content = data.get("content").getAsString();
-        boolean success = postService.createPost(currentUser.getId(), content);
+        Post createdPost = postService.createPost(currentUser.getId(), content);
 
         JsonObject response = new JsonObject();
-        response.addProperty("success", success);
-        response.addProperty("message", success ? "Post created" : "Failed to create post");
+        if (createdPost != null) {
+            response.addProperty("success", true);
+            response.add("post", gson.toJsonTree(createdPost));
+        } else {
+            response.addProperty("success", false);
+            response.addProperty("message", "Failed to create post");
+        }
         return response;
     }
 
@@ -247,9 +255,11 @@ public class ClientHandler implements Runnable {
 
         int postId = data.get("postId").getAsInt();
         boolean success = postService.toggleLike(currentUser.getId(), postId);
+        int likeCount = postService.getLikeCount(postId);
 
         JsonObject response = new JsonObject();
         response.addProperty("success", success);
+        response.addProperty("likeCount", likeCount);
         response.addProperty("message", success ? "Like toggled" : "Failed to toggle like");
         return response;
     }
@@ -419,7 +429,6 @@ public class ClientHandler implements Runnable {
     }
 
     // ==================== UTILITY METHODS ====================
-
     private JsonObject createErrorResponse(String message) {
         JsonObject response = new JsonObject();
         response.addProperty("success", false);
@@ -435,8 +444,12 @@ public class ClientHandler implements Runnable {
                 Logger.info("Client disconnected: " + clientSocket.getRemoteSocketAddress());
             }
 
-            if (in != null) in.close();
-            if (out != null) out.close();
+            if (in != null) {
+                in.close();
+            }
+            if (out != null) {
+                out.close();
+            }
             if (clientSocket != null && !clientSocket.isClosed()) {
                 clientSocket.close();
             }

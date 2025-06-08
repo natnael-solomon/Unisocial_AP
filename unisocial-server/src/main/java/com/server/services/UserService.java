@@ -74,8 +74,8 @@ public class UserService {
                         user.setAvatarUrl(rs.getString("avatar_url"));
                         user.setFollowingCount(rs.getInt("following_count"));
                         user.setFollowersCount(rs.getInt("followers_count"));
-                        user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                        user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                        user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toString());
+                        user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime().toString());
 
                         return user;
                     }
@@ -122,8 +122,8 @@ public class UserService {
                         user.setAvatarUrl(rs.getString("avatar_url"));
                         user.setFollowingCount(rs.getInt("following_count"));
                         user.setFollowersCount(rs.getInt("followers_count"));
-                        user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                        user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                        user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toString());
+                        user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime().toString());
 
                         return user;
                     }
@@ -231,8 +231,8 @@ public class UserService {
                         user.setAvatarUrl(rs.getString("avatar_url"));
                         user.setFollowingCount(rs.getInt("following_count"));
                         user.setFollowersCount(rs.getInt("followers_count"));
-                        user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                        user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                        user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toString());
+                        user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime().toString());
 
                         users.add(user);
                     }
@@ -374,8 +374,8 @@ public class UserService {
                         user.setAvatarUrl(rs.getString("avatar_url"));
                         user.setFollowingCount(rs.getInt("following_count"));
                         user.setFollowersCount(rs.getInt("followers_count"));
-                        user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                        user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                        user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toString());
+                        user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime().toString());
 
                         followers.add(user);
                     }
@@ -425,8 +425,8 @@ public class UserService {
                         user.setAvatarUrl(rs.getString("avatar_url"));
                         user.setFollowingCount(rs.getInt("following_count"));
                         user.setFollowersCount(rs.getInt("followers_count"));
-                        user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                        user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                        user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toString());
+                        user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime().toString());
 
                         following.add(user);
                     }

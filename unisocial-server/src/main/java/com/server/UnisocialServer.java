@@ -62,21 +62,16 @@ public class UnisocialServer {
             Logger.info("=== STARTING SERVER INITIALIZATION ===");
 
             // Initialize database
-            Logger.info("Step 1: Initializing database...");
             if (!databaseManager.initialize()) {
                 Logger.error("Failed to initialize database");
                 return;
             }
-            Logger.info("Step 2: Database initialization complete");
 
             // Create server socket
-            Logger.info("Step 3: Creating server socket...");
             serverSocket = new ServerSocket(config.getPort());
-            Logger.info("Step 4: Server socket created");
 
             running.set(true);
 
-            Logger.info("Step 5: Server ready, starting to accept connections...");
             Logger.info("UniSocial Server started on port " + config.getPort());
             Logger.info("Database: " + config.getDatabaseUrl());
             Logger.info("Max clients: " + config.getMaxClients());

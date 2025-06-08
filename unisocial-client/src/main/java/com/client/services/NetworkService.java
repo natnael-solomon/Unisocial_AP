@@ -1,25 +1,25 @@
 package com.client.services;
 
-import com.client.core.AppState;
-import com.client.models.Post;
-import com.client.models.User;
-import com.client.utils.ValidationUtils;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+
+import com.client.core.AppState;
+import com.client.models.Post;
+import com.client.models.User;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class NetworkService {
+
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 8080;
     private static final int CONNECTION_TIMEOUT = 5000; // 5 seconds
@@ -37,15 +37,14 @@ public class NetworkService {
     }
 
     // ==================== CONNECTION MANAGEMENT ====================
-
     /**
      * Check if the network connection is active
      *
      * @return true if connected, false otherwise
      */
     public boolean isConnected() {
-        return socket != null && socket.isConnected() && !socket.isClosed() &&
-                out != null && in != null;
+        return socket != null && socket.isConnected() && !socket.isClosed()
+                && out != null && in != null;
     }
 
     /**
@@ -159,7 +158,6 @@ public class NetworkService {
     }
 
     // ==================== AUTHENTICATION ====================
-
     /**
      * Login user
      *
@@ -260,17 +258,16 @@ public class NetworkService {
     }
 
     // ==================== POST OPERATIONS ====================
-
     /**
      * Create a new post
      *
      * @param content The post content
-     * @return true if successful, false otherwise
+     * @return Created post object if successful, null otherwise
      */
-    public boolean createPost(String content) {
+    public Post createPost(String content) {
         try {
             if (!ensureConnection()) {
-                return false;
+                return null;
             }
 
             JsonObject requestBody = new JsonObject();
@@ -280,11 +277,15 @@ public class NetworkService {
             sendRequest("CREATE_POST", requestBody);
             JsonObject response = readResponse();
 
-            return response != null && response.get("success").getAsBoolean();
+            if (response != null && response.get("success").getAsBoolean()) {
+                return gson.fromJson(response.get("post"), Post.class);
+            }
+
+            return null;
 
         } catch (Exception e) {
             System.err.println("Error creating post: " + e.getMessage());
-            return false;
+            return null;
         }
     }
 
@@ -329,7 +330,8 @@ public class NetworkService {
      * Like or unlike a post
      *
      * @param postId The post ID
-     * @return Object array containing [success, likeCount] where likeCount is -1 if not provided by server
+     * @return Object array containing [success, likeCount] where likeCount is
+     * -1 if not provided by server
      */
     public Object[] likePost(int postId) {
         try {
@@ -348,7 +350,7 @@ public class NetworkService {
                 int likeCount = response.has("likeCount") ? response.get("likeCount").getAsInt() : -1;
                 return new Object[]{true, likeCount};
             }
-            
+
             return new Object[]{false, -1};
 
         } catch (Exception e) {
@@ -412,7 +414,6 @@ public class NetworkService {
     }
 
     // ==================== USER OPERATIONS ====================
-
     /**
      * Get user by ID
      *
@@ -544,7 +545,6 @@ public class NetworkService {
     }
 
     // ==================== HELPER METHODS ====================
-
     /**
      * Ensure connection is established, attempt to reconnect if needed
      *
@@ -640,12 +640,11 @@ public class NetworkService {
      * @return unique client ID
      */
     private String generateClientId() {
-        return "client_" + System.currentTimeMillis() + "_" +
-                (int)(Math.random() * 10000);
+        return "client_" + System.currentTimeMillis() + "_"
+                + (int) (Math.random() * 10000);
     }
 
     // ==================== CONNECTION STATUS ====================
-
     /**
      * Get connection status information
      *
@@ -697,4 +696,3 @@ public class NetworkService {
         disconnect();
     }
 }
-

@@ -1,9 +1,9 @@
 package com.client.controllers;
 
 import com.client.events.AuthEvent;
-import com.client.models.User;
 import com.client.utils.ValidationUtils;
 import com.client.views.LoginView;
+
 import javafx.application.Platform;
 
 public class LoginController extends BaseController {

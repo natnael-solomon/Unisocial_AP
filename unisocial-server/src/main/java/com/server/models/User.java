@@ -13,8 +13,8 @@ public class User {
     private String avatarUrl;
     private int followingCount;
     private int followersCount;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String createdAt;
+    private String updatedAt;
 
     // Constructors
     public User() {}
@@ -23,6 +23,7 @@ public class User {
         this.id = id;
         this.username = username;
         this.fullName = fullName;
+        this.createdAt = LocalDateTime.now().toString();
     }
 
     // Getters and setters
@@ -47,11 +48,30 @@ public class User {
     public int getFollowersCount() { return followersCount; }
     public void setFollowersCount(int followersCount) { this.followersCount = followersCount; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    
+    // Helper method to get LocalDateTime if needed
+    public LocalDateTime getCreatedAtAsLocalDateTime() {
+        return createdAt != null ? LocalDateTime.parse(createdAt) : null;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
+    
+    // Helper method to get LocalDateTime if needed
+    public LocalDateTime getUpdatedAtAsLocalDateTime() {
+        return updatedAt != null ? LocalDateTime.parse(updatedAt) : null;
+    }
+    
+    // Helper method to set from LocalDateTime
+    public void setCreatedAt(LocalDateTime dateTime) {
+        this.createdAt = dateTime != null ? dateTime.toString() : null;
+    }
+    
+    public void setUpdatedAt(LocalDateTime dateTime) {
+        this.updatedAt = dateTime != null ? dateTime.toString() : null;
+    }
 
     @Override
     public String toString() {

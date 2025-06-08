@@ -1,5 +1,7 @@
 package com.client.services;
 
+import java.util.concurrent.CompletableFuture;
+
 import com.client.core.AppState;
 import com.client.core.EventBus;
 import com.client.events.AuthEvent;
@@ -7,7 +9,6 @@ import com.client.exceptions.AuthException;
 import com.client.models.AuthResult;
 import com.client.models.User;
 import com.client.utils.ValidationUtils;
-import java.util.concurrent.CompletableFuture;
 
 public class AuthService {
     private final NetworkService networkService;

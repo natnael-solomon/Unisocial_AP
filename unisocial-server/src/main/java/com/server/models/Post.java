@@ -14,8 +14,8 @@ public class Post {
     private int likeCount;
     private boolean liked; // For current user context
     private boolean bookmarked; // For current user context
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String createdAt;
+    private String updatedAt;
 
     // Constructors
     public Post() {}
@@ -24,8 +24,8 @@ public class Post {
         this.userId = userId;
         this.username = username;
         this.content = content;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now().toString();
+        this.updatedAt = LocalDateTime.now().toString();
     }
 
     // Getters and setters
@@ -53,11 +53,30 @@ public class Post {
     public boolean isBookmarked() { return bookmarked; }
     public void setBookmarked(boolean bookmarked) { this.bookmarked = bookmarked; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    
+    // Helper method to get LocalDateTime if needed
+    public LocalDateTime getCreatedAtAsLocalDateTime() {
+        return createdAt != null ? LocalDateTime.parse(createdAt) : null;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
+    
+    // Helper method to get LocalDateTime if needed
+    public LocalDateTime getUpdatedAtAsLocalDateTime() {
+        return updatedAt != null ? LocalDateTime.parse(updatedAt) : null;
+    }
+    
+    // Helper method to set from LocalDateTime
+    public void setCreatedAt(LocalDateTime dateTime) {
+        this.createdAt = dateTime != null ? dateTime.toString() : null;
+    }
+    
+    public void setUpdatedAt(LocalDateTime dateTime) {
+        this.updatedAt = dateTime != null ? dateTime.toString() : null;
+    }
 
     @Override
     public String toString() {

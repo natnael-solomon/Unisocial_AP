@@ -24,19 +24,9 @@ public class DatabaseManager {
             // Try to load SQLite driver explicitly
             try {
                 Class.forName("org.sqlite.JDBC");
-                Logger.info("SQLite JDBC driver loaded successfully");
             } catch (ClassNotFoundException e) {
                 Logger.error("SQLite JDBC driver not found in classpath");
                 Logger.error("Please ensure sqlite-jdbc dependency is included");
-                return false;
-            }
-
-            // Test database connection
-            try (Connection testConn = DriverManager.getConnection(databaseUrl)) {
-                Logger.info("Database connection test successful");
-                Logger.info("Database URL: " + databaseUrl);
-            } catch (SQLException e) {
-                Logger.error("Failed to connect to database: " + e.getMessage());
                 return false;
             }
 
@@ -76,7 +66,6 @@ public class DatabaseManager {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
-            Logger.info("Creating database tables...");
 
             // Users table
             String createUsersTable = """
@@ -92,7 +81,6 @@ public class DatabaseManager {
             )
         """;
             stmt.execute(createUsersTable);
-            Logger.info("Users table created/verified");
 
             // Posts table
             String createPostsTable = """
@@ -107,7 +95,6 @@ public class DatabaseManager {
             )
         """;
             stmt.execute(createPostsTable);
-            Logger.info("Posts table created/verified");
 
             // Likes table
             String createLikesTable = """
@@ -122,7 +109,6 @@ public class DatabaseManager {
             )
         """;
             stmt.execute(createLikesTable);
-            Logger.info("Likes table created/verified");
 
             // Bookmarks table
             String createBookmarksTable = """
@@ -137,7 +123,6 @@ public class DatabaseManager {
             )
         """;
             stmt.execute(createBookmarksTable);
-            Logger.info("Bookmarks table created/verified");
 
             // Follows table
             String createFollowsTable = """
@@ -152,10 +137,8 @@ public class DatabaseManager {
             )
         """;
             stmt.execute(createFollowsTable);
-            Logger.info("Follows table created/verified");
 
             // Create indexes for better performance
-            Logger.info("Creating database indexes...");
 
             try {
                 stmt.execute("CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts (user_id)");

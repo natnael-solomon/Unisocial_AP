@@ -1,5 +1,8 @@
 package com.client.controllers;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import com.client.events.PostEvent;
 import com.client.models.Post;
 import com.client.models.User;
@@ -7,16 +10,18 @@ import com.client.utils.ImageUtils;
 import com.client.utils.ValidationUtils;
 import com.client.views.FeedView;
 import com.client.views.PostView;
+
 import javafx.application.Platform;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import java.time.LocalDateTime;
-import java.util.List;
 
 public class FeedController extends BaseController {
+
     private final FeedView view;
     private double xOffset = 0;
     private double yOffset = 0;
+    private static final long FEED_REFRESH_INTERVAL = 5000; // 5 seconds
+    private long lastFeedUpdate = 0;
 
     public FeedController(FeedView view) {
         this.view = view;
@@ -27,6 +32,7 @@ public class FeedController extends BaseController {
         // Then initialize this controller
         initialize();
         subscribeToEvents();
+        startFeedRefresh();
     }
 
     @Override
@@ -91,7 +97,9 @@ public class FeedController extends BaseController {
     }
 
     private void updatePostValidation(String content) {
-        if (view == null) return;
+        if (view == null) {
+            return;
+        }
 
         // Sanitize content for validation
         String sanitized = ValidationUtils.sanitizeInput(content);
@@ -140,8 +148,8 @@ public class FeedController extends BaseController {
 
     private void addSamplePost(String username, String handle, String content, LocalDateTime timestamp, int likeCount) {
         // Validate all post data before creating
-        if (!ValidationUtils.isValidUsername(username.replace("@", "")) ||
-                !ValidationUtils.isValidPostContent(content)) {
+        if (!ValidationUtils.isValidUsername(username.replace("@", ""))
+                || !ValidationUtils.isValidPostContent(content)) {
             return; // Skip invalid posts
         }
 
@@ -186,14 +194,49 @@ public class FeedController extends BaseController {
             view.getPostTextField().clear();
             setPostCreationLoading(false);
 
-            // Add the new post to the top of the feed with validation
+            // Get current user for optimistic update
             User currentUser = appState.getCurrentUser();
-            if (currentUser != null) {
-                String username = ValidationUtils.sanitizeInput(currentUser.getUsername());
-                String content = ValidationUtils.sanitizeInput(event.getContent());
+            if (currentUser == null) {
+                return;
+            }
 
-                if (ValidationUtils.isValidUsername(username) && ValidationUtils.isValidPostContent(content)) {
-                    addSamplePost(username, "@" + username, content, LocalDateTime.now(), 0);
+            // Create optimistic post
+            Post optimisticPost = new Post();
+            optimisticPost.setUserId(currentUser.getId());
+            optimisticPost.setUsername(ValidationUtils.sanitizeInput(currentUser.getUsername()));
+            optimisticPost.setContent(ValidationUtils.sanitizeInput(event.getContent()));
+            optimisticPost.setCreatedAt(LocalDateTime.now().toString());
+            optimisticPost.setUpdatedAt(LocalDateTime.now().toString());
+            optimisticPost.setLikeCount(0);
+            optimisticPost.setLiked(false);
+            optimisticPost.setBookmarked(false);
+
+            // Add optimistic post immediately
+            PostView postView = new PostView();
+            PostController postController = new PostController(postView, optimisticPost);
+
+            // Disable like and bookmark buttons until we get server response
+            postView.getLikeIcon().setDisable(true);
+            postView.getBookmarkIcon().setDisable(true);
+
+            view.getPostsVBox().getChildren().add(0, postView);
+
+            // If we have the server's post, update with real data
+            if (event.getPost() != null) {
+                Post serverPost = event.getPost();
+                if (ValidationUtils.isValidPostContent(serverPost.getContent())
+                        && ValidationUtils.isNotEmpty(serverPost.getUsername())) {
+
+                    // Update the optimistic post with server data
+                    optimisticPost.setId(serverPost.getId());
+                    optimisticPost.setUsername(ValidationUtils.sanitizeInput(serverPost.getUsername()));
+                    optimisticPost.setContent(ValidationUtils.sanitizeInput(serverPost.getContent()));
+                    optimisticPost.setCreatedAt(serverPost.getCreatedAt());
+                    optimisticPost.setUpdatedAt(serverPost.getUpdatedAt());
+
+                    // Enable like and bookmark buttons after getting server response
+                    postView.getLikeIcon().setDisable(false);
+                    postView.getBookmarkIcon().setDisable(false);
                 }
             }
         });
@@ -209,6 +252,7 @@ public class FeedController extends BaseController {
     private void handleFeedLoaded(PostEvent.FeedLoaded event) {
         Platform.runLater(() -> {
             displayPosts(event.getPosts());
+            lastFeedUpdate = System.currentTimeMillis();
         });
     }
 
@@ -222,9 +266,9 @@ public class FeedController extends BaseController {
 
         for (Post post : posts) {
             // Validate post data before displaying
-            if (post != null &&
-                    ValidationUtils.isValidPostContent(post.getContent()) &&
-                    ValidationUtils.isNotEmpty(post.getUsername())) {
+            if (post != null
+                    && ValidationUtils.isValidPostContent(post.getContent())
+                    && ValidationUtils.isNotEmpty(post.getUsername())) {
 
                 // Sanitize post data
                 post.setUsername(ValidationUtils.sanitizeInput(post.getUsername()));
@@ -273,5 +317,36 @@ public class FeedController extends BaseController {
 
     private Stage getStage() {
         return (Stage) view.getScene().getWindow();
+    }
+
+    private void startFeedRefresh() {
+        Thread refreshThread = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(FEED_REFRESH_INTERVAL);
+                    refreshFeed();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        });
+        refreshThread.setDaemon(true);
+        refreshThread.start();
+    }
+
+    private void refreshFeed() {
+        if (System.currentTimeMillis() - lastFeedUpdate >= FEED_REFRESH_INTERVAL) {
+            Platform.runLater(() -> {
+                postService.getFeed();
+            });
+        }
+    }
+
+    @Override
+    public void cleanup() {
+        // Stop the refresh thread
+        Thread.currentThread().interrupt();
+        super.cleanup();
     }
 }
