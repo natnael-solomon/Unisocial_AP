@@ -35,8 +35,6 @@ public class FeedView extends BorderPane {
     private FontIcon activityIcon;
     private Label activityLabel;
 
-    // Center Content Area
-    private VBox centerFeedArea;
     private TextField postTextField;
     private Button createPostButton;
     private ScrollPane feedScrollPane;
@@ -152,7 +150,8 @@ public class FeedView extends BorderPane {
         setLeft(leftSidebar);
 
         // --- Center Content Area ---
-        centerFeedArea = new VBox();
+        // Center Content Area
+        VBox centerFeedArea = new VBox();
         centerFeedArea.getStyleClass().add("feed-content-area");
         BorderPane.setAlignment(centerFeedArea, Pos.CENTER);
 

@@ -1,17 +1,17 @@
 package com.client.models;
 
-import javafx.beans.property.*;
+import java.time.LocalDateTime;
 
 public class User {
-
-    private final IntegerProperty id = new SimpleIntegerProperty();
-    private final StringProperty username = new SimpleStringProperty();
-    private final StringProperty fullName = new SimpleStringProperty();
-    private final StringProperty bio = new SimpleStringProperty();
-    private final IntegerProperty followingCount = new SimpleIntegerProperty();
-    private final IntegerProperty followersCount = new SimpleIntegerProperty();
-    private final BooleanProperty online = new SimpleBooleanProperty();
-    private final StringProperty avatarUrl = new SimpleStringProperty();
+    private int id;
+    private String username;
+    private String fullName;
+    private String bio;
+    private String avatarUrl;
+    private int followingCount;
+    private int followersCount;
+    private String createdAt;
+    private String updatedAt;
 
     public User() {}
 
@@ -34,79 +34,75 @@ public class User {
 
     // ID
     public int getId() {
-        return id.get();
+        return id;
     }
     public void setId(int id) {
-        this.id.set(id);
-    }
-    public IntegerProperty idProperty() {
-        return id;
+        this.id = id;
     }
 
     // Username
     public String getUsername() {
-        return username.get();
+        return username;
     }
     public void setUsername(String username) {
-        this.username.set(username);
-    }
-    public StringProperty usernameProperty() {
-        return username;
+        this.username = username;
     }
 
     // Full Name
     public String getFullName() {
-        return fullName.get();
+        return fullName;
     }
     public void setFullName(String fullName) {
-        this.fullName.set(fullName);
-    }
-    public StringProperty fullNameProperty() {
-        return fullName;
+        this.fullName = fullName;
     }
 
     // Bio
     public String getBio() {
-        return bio.get();
+        return bio;
     }
     public void setBio(String bio) {
-        this.bio.set(bio);
-    }
-    public StringProperty bioProperty() {
-        return bio;
+        this.bio = bio;
     }
 
     // Following Count
     public int getFollowingCount() {
-        return followingCount.get();
+        return followingCount;
     }
     public void setFollowingCount(int followingCount) {
-        this.followingCount.set(followingCount);
-    }
-    public IntegerProperty followingCountProperty() {
-        return followingCount;
+        this.followingCount = followingCount;
     }
 
     // Followers Count
     public int getFollowersCount() {
-        return followersCount.get();
-    }
-    public void setFollowersCount(int followersCount) {
-        this.followersCount.set(followersCount);
-    }
-    public IntegerProperty followersCountProperty() {
         return followersCount;
     }
+    public void setFollowersCount(int followersCount) {
+        this.followersCount = followersCount;
+    }
 
-    // Online Status
-    public boolean isOnline() { return online.get(); }
-    public void setOnline(boolean online) { this.online.set(online); }
-    public BooleanProperty onlineProperty() { return online; }
+    // Created At
+    public String getCreatedAt() {
+        return createdAt;
+    }
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    // Updated At
+    public String getUpdatedAt() {
+        return updatedAt;
+    }
+    public void setUpdatedAt(String updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
     // Avatar URL
-    public String getAvatarUrl() { return avatarUrl.get(); }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl.set(avatarUrl); }
-    public StringProperty avatarUrlProperty() { return avatarUrl; }
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
 
     @Override
     public String toString() {

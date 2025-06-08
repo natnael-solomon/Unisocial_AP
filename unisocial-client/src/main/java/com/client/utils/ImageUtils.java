@@ -11,8 +11,7 @@ import java.util.Objects;
 public class ImageUtils {
     private static final Map<String, Image> imageCache = new HashMap<>();
     private static final Image DEFAULT_AVATAR = loadImage("/images/default-avatar.png");
-    private static final Image DEFAULT_POST_IMAGE = loadImage("/images/default-post-welcome_image.png");
-    
+
     public static void loadUserAvatar(int userId, ImageView imageView) {
         if (imageView == null) return;
         
@@ -47,12 +46,11 @@ public class ImageUtils {
                 image = loadImage(imageUrl);
             }
         }
-        
-        if (image == null) {
-            image = DEFAULT_POST_IMAGE;
+
+        if (image != null) {
+            imageView.setImage(image);
         }
-        
-        imageView.setImage(image);
+
     }
     
     public static Image loadImage(String path) {
@@ -81,7 +79,7 @@ public class ImageUtils {
             imageCache.put(path, image);
             return image;
         } catch (Exception e) {
-            System.err.println("Failed to load image: " + path + " - " + e.getMessage());
+            System.out.println("Failed to load image: " + path + " - " + e.getMessage());
             return null;
         }
     }

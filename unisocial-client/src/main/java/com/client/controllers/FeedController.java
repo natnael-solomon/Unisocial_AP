@@ -150,7 +150,8 @@ public class FeedController extends BaseController {
         post.setUserId((int) (Math.random() * 100));
         post.setUsername(ValidationUtils.sanitizeInput(username));
         post.setContent(ValidationUtils.sanitizeInput(content));
-        post.setCreatedAt(timestamp);
+        post.setCreatedAt(timestamp != null ? timestamp.toString() : LocalDateTime.now().toString());
+        post.setUpdatedAt(LocalDateTime.now().toString());
         post.setLikeCount(Math.max(0, likeCount)); // Ensure non-negative
         post.setLiked(false);
         post.setBookmarked(false);

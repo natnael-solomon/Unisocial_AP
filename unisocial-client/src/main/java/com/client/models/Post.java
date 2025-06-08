@@ -4,15 +4,16 @@ import javafx.beans.property.*;
 import java.time.LocalDateTime;
 
 public class Post {
-    private final IntegerProperty id = new SimpleIntegerProperty();
-    private final IntegerProperty userId = new SimpleIntegerProperty();
-    private final StringProperty username = new SimpleStringProperty();
-    private final StringProperty content = new SimpleStringProperty();
-    private final StringProperty imageUrl = new SimpleStringProperty();
-    private final IntegerProperty likeCount = new SimpleIntegerProperty();
-    private final BooleanProperty liked = new SimpleBooleanProperty();
-    private final BooleanProperty bookmarked = new SimpleBooleanProperty();
-    private final ObjectProperty<LocalDateTime> createdAt = new SimpleObjectProperty<>();
+    private int id;
+    private int userId;
+    private String username;
+    private String content;
+    private String imageUrl;
+    private int likeCount;
+    private boolean liked;
+    private boolean bookmarked;
+    private String createdAt;
+    private String updatedAt;
     
     public Post() {}
     
@@ -21,63 +22,87 @@ public class Post {
         setUserId(userId);
         setUsername(username);
         setContent(content);
-        setCreatedAt(LocalDateTime.now());
+        setCreatedAt(LocalDateTime.now().toString());
     }
     
-    // ID
-    public int getId() { return id.get(); }
-    public void setId(int id) { this.id.set(id); }
-    public IntegerProperty idProperty() { return id; }
+    // Getters and setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
     
     // User ID
-    public int getUserId() { return userId.get(); }
-    public void setUserId(int userId) { this.userId.set(userId); }
-    public IntegerProperty userIdProperty() { return userId; }
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
     
     // Username
-    public String getUsername() { return username.get(); }
-    public void setUsername(String username) { this.username.set(username); }
-    public StringProperty usernameProperty() { return username; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
     
     // Content
-    public String getContent() { return content.get(); }
-    public void setContent(String content) { this.content.set(content); }
-    public StringProperty contentProperty() { return content; }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
     
     // Image URL
-    public String getImageUrl() { return imageUrl.get(); }
-    public void setImageUrl(String imageUrl) { this.imageUrl.set(imageUrl); }
-    public StringProperty imageUrlProperty() { return imageUrl; }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     
     // Like Count
-    public int getLikeCount() { return likeCount.get(); }
-    public void setLikeCount(int count) { this.likeCount.set(count); }
-    public IntegerProperty likeCountProperty() { return likeCount; }
+    public int getLikeCount() { return likeCount; }
+    public void setLikeCount(int likeCount) { this.likeCount = likeCount; }
     
     // Liked
-    public boolean isLiked() { return liked.get(); }
-    public void setLiked(boolean liked) { this.liked.set(liked); }
-    public BooleanProperty likedProperty() { return liked; }
+    public boolean isLiked() { return liked; }
+    public void setLiked(boolean liked) { this.liked = liked; }
     
     // Bookmarked
-    public boolean isBookmarked() { return bookmarked.get(); }
-    public void setBookmarked(boolean bookmarked) { this.bookmarked.set(bookmarked); }
-    public BooleanProperty bookmarkedProperty() { return bookmarked; }
+    public boolean isBookmarked() { return bookmarked; }
+    public void setBookmarked(boolean bookmarked) { this.bookmarked = bookmarked; }
     
     // Created At
-    public LocalDateTime getCreatedAt() { return createdAt.get(); }
-    public void setCreatedAt(LocalDateTime dateTime) { this.createdAt.set(dateTime); }
-    public ObjectProperty<LocalDateTime> createdAtProperty() { return createdAt; }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    
+    public String getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
+    
+    // Helper methods for JavaFX binding
+    public StringProperty usernameProperty() {
+        return new SimpleStringProperty(username != null ? username : "");
+    }
+    
+    public StringProperty contentProperty() {
+        return new SimpleStringProperty(content != null ? content : "");
+    }
+    
+    public IntegerProperty likeCountProperty() {
+        return new SimpleIntegerProperty(likeCount);
+    }
+    
+    public BooleanProperty likedProperty() {
+        return new SimpleBooleanProperty(liked);
+    }
+    
+    public BooleanProperty bookmarkedProperty() {
+        return new SimpleBooleanProperty(bookmarked);
+    }
+    
+    // Helper methods for LocalDateTime conversion
+    public LocalDateTime getCreatedAtAsLocalDateTime() {
+        return getCreatedAt() != null ? LocalDateTime.parse(getCreatedAt()) : null;
+    }
+    
+    public LocalDateTime getUpdatedAtAsLocalDateTime() {
+        return getUpdatedAt() != null ? LocalDateTime.parse(getUpdatedAt()) : null;
+    }
     
     @Override
     public String toString() {
         return "Post{" +
-                "id=" + getId() +
-                ", userId=" + getUserId() +
-                ", username='" + getUsername() + '\'' +
-                ", content='" + getContent() + '\'' +
-                ", likeCount=" + getLikeCount() +
-                ", createdAt=" + getCreatedAt() +
+                "id=" + id +
+                ", userId=" + userId +
+                ", username='" + username + '\'' +
+                ", content='" + content + '\'' +
+                ", likeCount=" + likeCount +
+                ", createdAt=" + createdAt +
                 '}';
     }
 }

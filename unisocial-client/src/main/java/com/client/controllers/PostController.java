@@ -6,7 +6,10 @@ import com.client.utils.ImageUtils;
 import com.client.utils.ValidationUtils;
 import com.client.views.PostView;
 import javafx.application.Platform;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PostController extends BaseController {
     private final PostView view;
@@ -77,14 +80,23 @@ public class PostController extends BaseController {
         if (ValidationUtils.isNotEmpty(post.getImageUrl()) && ValidationUtils.isValidUrl(post.getImageUrl())) {
             ImageUtils.loadPostImage(post.getImageUrl(), view.getPostImageView());
             view.getImageStackPane().setVisible(true);
+            view.getImageStackPane().setManaged(true);
         } else {
+            // Completely remove the image container from layout when there's no image
             view.getImageStackPane().setVisible(false);
+            view.getImageStackPane().setManaged(false);
         }
 
         // Set timestamp tooltip
-        if (post.getCreatedAt() != null) {
-            String timeText = post.getCreatedAt().format(TIME_FORMATTER);
-            view.getContentLabel().setTooltip(new javafx.scene.control.Tooltip(timeText));
+        if (post.getCreatedAt() != null && !post.getCreatedAt().isEmpty()) {
+            try {
+                LocalDateTime createdAt = LocalDateTime.parse(post.getCreatedAt());
+                String timeText = createdAt.format(TIME_FORMATTER);
+                view.getContentLabel().setTooltip(new javafx.scene.control.Tooltip(timeText));
+            } catch (Exception e) {
+                // Fallback to raw string if parsing fails
+                view.getContentLabel().setTooltip(new javafx.scene.control.Tooltip(post.getCreatedAt()));
+            }
         }
     }
 
@@ -103,36 +115,91 @@ public class PostController extends BaseController {
     }
 
     private void handleLikeClick() {
-        if (post == null) return;
+        if (post == null) {
+            System.out.println("Cannot like: post is null");
+            return;
+        }
 
-        // Toggle like state optimistically
+        // Disable the like button to prevent multiple clicks
+        view.getLikeIcon().setDisable(true);
+        
+        // Get the new state we want to set
         boolean newLikedState = !post.isLiked();
-        post.setLiked(newLikedState);
-
-        // Update like count
-        int newLikeCount = newLikedState ? post.getLikeCount() + 1 : Math.max(0, post.getLikeCount() - 1);
-        post.setLikeCount(newLikeCount);
-
-        // Update UI
+        int currentLikeCount = post.getLikeCount();
+        int newLikeCount = newLikedState ? currentLikeCount + 1 : Math.max(0, currentLikeCount - 1);
+        
+        // Optimistically update the UI
         updateLikeState(newLikedState);
         view.getLikeCountLabel().setText(String.valueOf(newLikeCount));
-
+        
+        System.out.println("Optimistic update - Post ID: " + post.getId() +
+                         ", Liked: " + newLikedState + 
+                         ", Count: " + newLikeCount);
+        
         // Send request to server
-        postService.likePost(post.getId());
+        postService.likePost(post.getId()).whenComplete((result, error) -> {
+            Platform.runLater(() -> {
+                // Re-enable the button
+                view.getLikeIcon().setDisable(false);
+                
+                if (error != null) {
+                    // Revert optimistic update on error
+                    updateLikeState(!newLikedState);
+                    view.getLikeCountLabel().setText(String.valueOf(currentLikeCount));
+                    System.err.println("Failed to update like state: " + error.getMessage());
+                    return;
+                }
+                
+                // Update UI based on server response
+                if (result != null && result) {
+                    // The server will send a LikeToggled event with the final state
+                    // No need to update the UI here as it's already been updated optimistically
+                    System.out.println("Server confirmed like state - Post ID: " + post.getId() +
+                                   ", Liked: " + newLikedState + 
+                                   ", Count: " + newLikeCount);
+                } else {
+                    // Revert optimistic update on failure
+                    updateLikeState(!newLikedState);
+                    view.getLikeCountLabel().setText(String.valueOf(currentLikeCount));
+                    System.err.println("Server returned failure when toggling like");
+                }
+            });
+        });
     }
 
     private void handleBookmarkClick() {
-        if (post == null) return;
+        if (post == null) {
+            System.out.println("Cannot bookmark: post is null");
+            return;
+        }
 
         // Toggle bookmark state optimistically
         boolean newBookmarkedState = !post.isBookmarked();
+        
+        // Update the model
         post.setBookmarked(newBookmarkedState);
-
-        // Update UI
+        
+        // Update UI immediately for better responsiveness
         updateBookmarkState(newBookmarkedState);
-
+        
+        // Log the optimistic update
+        System.out.println("Optimistic update - Post ID: " + post.getId() + 
+                         ", Bookmarked: " + newBookmarkedState);
+        
         // Send request to server
-        postService.bookmarkPost(post.getId());
+        postService.bookmarkPost(post.getId()).whenComplete((_success, error) -> {
+            if (error != null) {
+                // Revert optimistic update on error
+                boolean revertBookmarkedState = !newBookmarkedState;
+                
+                Platform.runLater(() -> {
+                    post.setBookmarked(revertBookmarkedState);
+                    updateBookmarkState(revertBookmarkedState);
+                    
+                    System.err.println("Failed to update bookmark state: " + error.getMessage());
+                });
+            }
+        });
     }
 
     private void handleMoreOptions() {
@@ -150,45 +217,110 @@ public class PostController extends BaseController {
     }
 
     private void updateLikeState(boolean liked) {
-        if (view == null) return;
-
-        if (liked) {
-            view.getLikeIcon().setIconLiteral("fas-heart");
-            view.getLikeIcon().getStyleClass().add("liked");
-        } else {
-            view.getLikeIcon().setIconLiteral("far-heart");
-            view.getLikeIcon().getStyleClass().remove("liked");
+        if (view == null || view.getLikeIcon() == null) {
+            return;
         }
+        
+        // Get current classes for debugging
+        String currentClasses = String.join(" ", view.getLikeIcon().getStyleClass());
+        System.out.println("Before update - Current classes: " + currentClasses);
+        
+        // Remove any existing like-related classes
+        boolean removed = view.getLikeIcon().getStyleClass().removeIf(style -> 
+            style.equals("fas-heart") || 
+            style.equals("far-heart") || 
+            style.equals("liked")
+        );
+        System.out.println("Removed old icon classes: " + removed);
+        
+        // Add the appropriate classes
+        if (liked) {
+            view.getLikeIcon().getStyleClass().add("fas-heart");
+            view.getLikeIcon().getStyleClass().add("liked");
+            System.out.println("Added fas-heart and liked classes");
+        } else {
+            view.getLikeIcon().getStyleClass().add("far-heart");
+            System.out.println("Added far-heart class");
+        }
+        
+        // Force update the icon literal
+        String iconLiteral = liked ? "fas-heart" : "far-heart";
+        view.getLikeIcon().setIconLiteral(iconLiteral);
+        
+        // Log the final state
+        String finalClasses = String.join(" ", view.getLikeIcon().getStyleClass());
+        System.out.println("updateLikeState - Liked: " + liked + 
+                         ", Current classes: " + finalClasses + 
+                         ", Icon literal: " + iconLiteral);
     }
 
     private void updateBookmarkState(boolean bookmarked) {
         if (view == null) return;
 
+        // First remove any existing icon classes to prevent duplicates
+        view.getBookmarkIcon().getStyleClass().removeAll("fas-bookmark", "far-bookmark", "bookmarked");
+        
         if (bookmarked) {
-            view.getBookmarkIcon().setIconLiteral("fas-bookmark");
-            view.getBookmarkIcon().getStyleClass().add("bookmarked");
+            view.getBookmarkIcon().getStyleClass().addAll("fas-bookmark", "bookmarked");
         } else {
-            view.getBookmarkIcon().setIconLiteral("far-bookmark");
-            view.getBookmarkIcon().getStyleClass().remove("bookmarked");
+            view.getBookmarkIcon().getStyleClass().add("far-bookmark");
         }
+        
+        // Force update the icon literal
+        view.getBookmarkIcon().setIconLiteral(bookmarked ? "fas-bookmark" : "far-bookmark");
     }
 
     private void handleLikeToggled(PostEvent.LikeToggled event) {
-        if (post != null && event.getPostId() == post.getId()) {
-            Platform.runLater(() -> {
-                post.setLiked(event.isLiked());
-                post.setLikeCount(Math.max(0, event.getLikeCount()));
-                updateLikeState(event.isLiked());
-                view.getLikeCountLabel().setText(String.valueOf(event.getLikeCount()));
-            });
+        if (post == null || event.getPostId() != post.getId()) {
+            return;
         }
+
+        Platform.runLater(() -> {
+            boolean currentLiked = post.isLiked();
+            int currentLikeCount = post.getLikeCount();
+            boolean newLikedState = event.isLiked();
+            int newLikeCount = Math.max(0, event.getLikeCount());
+            
+            // Debug logging
+            System.out.println("Processing LikeToggled event - Current: " + currentLiked + 
+                             ", New: " + newLikedState + 
+                             ", CurrentCount: " + currentLikeCount + 
+                             ", NewCount: " + newLikeCount);
+            
+            // Only update if the state is actually different
+            if (currentLiked != newLikedState || currentLikeCount != newLikeCount) {
+                // Update the model
+                post.setLiked(newLikedState);
+                post.setLikeCount(newLikeCount);
+                
+                // Update the UI
+                updateLikeState(newLikedState);
+                view.getLikeCountLabel().setText(String.valueOf(newLikeCount));
+                
+                System.out.println("Like state updated from event - Post ID: " + post.getId() + 
+                                 ", Liked: " + newLikedState + 
+                                 ", Count: " + newLikeCount);
+            } else {
+                System.out.println("Ignoring duplicate like toggle event - state unchanged");
+            }
+        });
     }
 
     private void handleBookmarkToggled(PostEvent.BookmarkToggled event) {
         if (post != null && event.getPostId() == post.getId()) {
             Platform.runLater(() -> {
-                post.setBookmarked(event.isBookmarked());
-                updateBookmarkState(event.isBookmarked());
+                // Update the post's bookmark state
+                boolean newBookmarkedState = event.isBookmarked();
+                
+                // Update the model
+                post.setBookmarked(newBookmarkedState);
+                
+                // Update the UI
+                updateBookmarkState(newBookmarkedState);
+                
+                // Log for debugging
+                System.out.println("Bookmark toggled - Post ID: " + post.getId() + 
+                                 ", Bookmarked: " + newBookmarkedState);
             });
         }
     }

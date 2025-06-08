@@ -14,9 +14,9 @@ public class ServiceManager {
     private ServiceManager() {
         this.eventBus = new EventBus();
         
-        // Use mock service for testing, switch to real NetworkService when server is ready
-        this.networkService = new MockNetworkService();
-        // this.networkService = new NetworkService(); // Use this for real server
+        // mock service for testing
+        // this.networkService = new MockNetworkService();
+        this.networkService = new NetworkService(); //real server
         
         this.authService = new AuthService(networkService, eventBus);
         this.postService = new PostService(networkService, eventBus);

@@ -1,3 +1,4 @@
+/*
 package com.client.services;
 
 import com.client.models.Post;
@@ -11,10 +12,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+*/
 /**
  * Mock implementation of NetworkService for testing and development
  * Uses in-memory data and simulates network delays
- */
+ *//*
+
 public class MockNetworkService extends NetworkService {
 
     // Mock data storage
@@ -53,9 +56,11 @@ public class MockNetworkService extends NetworkService {
         initializeMockData();
     }
 
-    /**
+    */
+/**
      * Initialize mock data with sample users and posts
-     */
+     *//*
+
     private void initializeMockData() {
         // Create sample users
         createMockUser("john_doe", "John Doe", "Software developer passionate about JavaFX and social media apps.");
@@ -575,30 +580,38 @@ public class MockNetworkService extends NetworkService {
 
     // ==================== MOCK-SPECIFIC METHODS ====================
 
-    /**
+    */
+/**
      * Get current mock user (for testing)
-     */
+     *//*
+
     public User getCurrentMockUser() {
         return currentUser;
     }
 
-    /**
+    */
+/**
      * Get all mock users (for testing)
-     */
+     *//*
+
     public Collection<User> getAllMockUsers() {
         return users.values();
     }
 
-    /**
+    */
+/**
      * Get all mock posts (for testing)
-     */
+     *//*
+
     public Collection<Post> getAllMockPosts() {
         return posts.values();
     }
 
-    /**
+    */
+/**
      * Reset mock data
-     */
+     *//*
+
     public void resetMockData() {
         users.clear();
         posts.clear();
@@ -614,11 +627,14 @@ public class MockNetworkService extends NetworkService {
         System.out.println("MockNetworkService: Mock data reset");
     }
 
-    /**
+    */
+/**
      * Set failure rate for testing error handling
-     */
+     *//*
+
     public void setFailureRate(double failureRate) {
         // This would require making the field non-final, but for demo purposes
         System.out.println("MockNetworkService: Failure rate would be set to " + failureRate);
     }
 }
+*/

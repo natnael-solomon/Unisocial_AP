@@ -101,13 +101,15 @@ public class PostService {
                     throw new RuntimeException("Unable to connect to server");
                 }
 
-                // Toggle like on server
-                boolean success = networkService.likePost(postId);
+                // Toggle like on server and get the updated like count
+                Object[] result = networkService.likePost(postId);
+                boolean success = (boolean) result[0];
+                int likeCount = (int) result[1];
 
                 if (success) {
-                    // Note: In a real implementation, the server should return
-                    // the updated like status and count
-                    eventBus.publish(new PostEvent.LikeToggled(postId, true, 0));
+                    // Publish the like toggled event with the updated like count
+                    // If likeCount is -1, it means the server didn't provide an updated count
+                    eventBus.publish(new PostEvent.LikeToggled(postId, true, likeCount));
                 } else {
                     eventBus.publish(new PostEvent.LikeFailure(postId, "Failed to toggle like"));
                 }
@@ -237,3 +239,4 @@ public class PostService {
 
 
 }
+

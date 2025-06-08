@@ -329,12 +329,12 @@ public class NetworkService {
      * Like or unlike a post
      *
      * @param postId The post ID
-     * @return true if successful, false otherwise
+     * @return Object array containing [success, likeCount] where likeCount is -1 if not provided by server
      */
-    public boolean likePost(int postId) {
+    public Object[] likePost(int postId) {
         try {
             if (!ensureConnection()) {
-                return false;
+                return new Object[]{false, -1};
             }
 
             JsonObject requestBody = new JsonObject();
@@ -344,11 +344,16 @@ public class NetworkService {
             sendRequest("LIKE_POST", requestBody);
             JsonObject response = readResponse();
 
-            return response != null && response.get("success").getAsBoolean();
+            if (response != null && response.get("success").getAsBoolean()) {
+                int likeCount = response.has("likeCount") ? response.get("likeCount").getAsInt() : -1;
+                return new Object[]{true, likeCount};
+            }
+            
+            return new Object[]{false, -1};
 
         } catch (Exception e) {
             System.err.println("Error liking post: " + e.getMessage());
-            return false;
+            return new Object[]{false, -1};
         }
     }
 
@@ -692,3 +697,4 @@ public class NetworkService {
         disconnect();
     }
 }
+
